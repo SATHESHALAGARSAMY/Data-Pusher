@@ -41,6 +41,9 @@ const getAllDestinations = async (req, res) => {
     try {
         const sql = 'SELECT d.*, a.* FROM destinations AS d INNER JOIN accounts AS a ON d.account_id = a.account_id WHERE d.account_id = ? AND d.status = "Y" AND a.status = "Y"';
         const result = await db.all(sql, [req.params.accountId]);
+        if(!result){
+            throw new Error('No destinations found');
+        }
         return res.json({
             code: 200,
             success: true,
@@ -66,6 +69,9 @@ const getDestinationById = async (req, res) => {
     try {
         const sql = 'SELECT d.*, a.* FROM destinations AS d INNER JOIN accounts AS a ON d.account_id = a.account_id WHERE d.destination_id = ? AND d.status = "Y" AND a.status = "Y"';
         const result = await db.get(sql, [req.params.destinationId]);
+        if(!result){
+            throw new Error('Destination not found');
+        }
         return res.json({
             code: 200,
             success: true,
