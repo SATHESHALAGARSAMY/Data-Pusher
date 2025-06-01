@@ -1,5 +1,6 @@
 const { getDatabase } = require('../../db');
 const dayjs = require('dayjs');
+const apiKey = require("../../middleware/apiKey");
 
 const db = getDatabase();
 
@@ -10,7 +11,7 @@ const db = getDatabase();
  */
 const createAccount = async (req, res) => {
     try {
-        const { accountId, email, accountName, website, appSecretToken } = req.body;
+        const { accountId, email, accountName, website } = req.body;
         if (!accountId || !email || !accountName || !website || !appSecretToken) {
             throw new Error('Missing required fields');
         }
@@ -20,6 +21,8 @@ const createAccount = async (req, res) => {
         if (emailCheckResult.count > 0) {
             throw new Error('Email already exists');
         }
+        //generate app_secret_token
+        let appSecretToken = apiKey.generateApiKey();
         // Create a new account
         const sql = 'INSERT INTO accounts ( account_id, email, account_name, website, app_secret_token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
         const result = await db.run(sql, [accountId, email, accountName, website, appSecretToken, new Date(), new Date()]);
