@@ -32,7 +32,8 @@ const initializeDatabase = () => {
       account_name TEXT NOT NULL,
       website TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT DEFAULT 'Y' CHECK(status IN ('Y', 'N', 'D'))
     )`);
 
     // Destinations table
@@ -44,6 +45,7 @@ const initializeDatabase = () => {
       headers TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT DEFAULT 'Y' CHECK(status IN ('Y', 'N', 'D'))
       FOREIGN KEY (account_id) REFERENCES accounts (account_id) ON DELETE CASCADE
     )`);
   });
