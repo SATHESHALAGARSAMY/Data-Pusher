@@ -17,19 +17,27 @@ const createAccount = async (req, res) => {
         // Check if the email already exists
         const checkEmailSql = 'SELECT COUNT(*) as count FROM accounts WHERE email = ?';
         const emailCheckResult = await db.get(checkEmailSql, [email]);
-        console.log('Email check result:', emailCheckResult);
         if (emailCheckResult.count > 0) {
             throw new Error('Email already exists');
         }
         // Create a new account
         const sql = 'INSERT INTO accounts ( account_id, email, account_name, website, app_secret_token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
         const result = await db.run(sql, [accountId, email, accountName, website, appSecretToken, new Date(), new Date()]);
-        return res.status(200).json({ message: 'Account created successfully', result });
+        return res.json({
+            code: 200,
+            success: true,
+            message: 'Account created successfully',
+            result
+        })
     } catch (error) {
         console.error('Error creating account:', error);
-        res.status(500).json({ error: error.message || 'Failed to create account' });
+        return res.json({
+            code: 500,
+            success: false,
+            message: error.message || 'Failed to create account'
+        })
     }
-};
+}
 
 /**
  * Get accounts by date
@@ -40,15 +48,24 @@ const createAccount = async (req, res) => {
 const getAccounts = async (req, res) => {
     try {
         const { date } = req.params;
-        const sql = 'SELECT * FROM accounts WHERE created_at = ?';
+        const sql = 'SELECT * FROM accounts WHERE created_at = ? AND status = "Y"';
         const result = await db.all(sql, [dayjs(date).format('YYYY-MM-DD')]);
         if (!result) {
             throw new Error('No accounts found');
         }
-        return res.status(200).json({ message: 'Accounts fetched successfully', result });
+        return res.json({
+            code: 200,
+            success: true,
+            message: 'Accounts fetched successfully',
+            result
+        });
     } catch (error) {
         console.error('Error fetching accounts:', error);
-        res.status(500).json({ error: error.message || 'Failed to fetch accounts' });
+        return res.json({
+            code: 500,
+            success: false,
+            message: error.message || 'Failed to fetch accounts'
+        });
     }
 }
 
@@ -59,17 +76,25 @@ const getAccounts = async (req, res) => {
  */
 const getAccountById = async (req, res) => {
     try {
-        console.log('getAccountById', req.params);
         const { accountId } = req.params;
-        const sql = 'SELECT * FROM accounts WHERE account_id = ?';
+        const sql = 'SELECT * FROM accounts WHERE account_id = ? AND status = "Y"';
         const result = await db.get(sql, [accountId]);
         if (!result) {
             throw new Error('Account not found');
         }
-        return res.status(200).json({ message: 'Account fetched successfully', result });
+        return res.json({
+            code: 200,
+            success: true,
+            message: 'Account fetched successfully',
+            result
+        })
     } catch (error) {
         console.error('Error fetching account:', error);
-        res.status(500).json({ error: error.message || 'Failed to fetch account' });
+        return res.json({
+            code: 500,
+            success: false,
+            message: error.message || 'Failed to fetch account'
+        })
     }
 }
 
@@ -81,32 +106,92 @@ const getAccountById = async (req, res) => {
 
 const updateAccountById = async (req, res) => {
     try {
-        console.log('updateAccountById', req.body);
-        console.log('updateAccountById', req.params);
         const { accountId } = req.params;
-        const { email, accountName, website, appSecretToken } = req.body;
-        if (!accountId || !email || !accountName || !website || !appSecretToken) {
-            throw new Error('Missing required fields');
+        if (!accountId) {
+            throw new Error('Account ID is required');
         }
-        // Check if the email already exists
-        const checkEmailSql = 'SELECT COUNT(*) as count FROM accounts WHERE email = ?';
-        const emailCheckResult = await db.get(checkEmailSql, [email]);
-        console.log('Email check result:', emailCheckResult);
-        if (emailCheckResult.count > 0) {
-            throw new Error('Email already exists');
+
+        // Prepare the fields to update
+        const fields = [];
+        const values = [];
+
+        // Map of field names to request body properties
+        const fieldMap = {
+            email: 'email',
+            account_name: 'accountName',
+            website: 'website',
+            app_secret_token: 'appSecretToken'
+        };
+
+        // Iterate over the field map to populate fields and values
+        for (const [field, prop] of Object.entries(fieldMap)) {
+            if (req.body[prop]) {
+                fields.push(`${field} = ?`);
+                values.push(req.body[prop]);
+            }
         }
-        const sql = 'UPDATE accounts SET email = ?, account_name = ?, website = ?, updated_at = ? WHERE account_id = ?';
-        const result = await db.run(sql, [email, accountName, website,new Date(), accountId]);
-        return res.status(200).json({ message: 'Account updated successfully', result });
+
+        if (fields.length === 0) {
+            throw new Error('No fields to update');
+        }
+
+        // Add updated_at field
+        fields.push('updated_at = ?');
+        values.push(new Date());
+
+        // Add accountId to the values array for the WHERE clause
+        values.push(accountId);
+
+        const sql = `UPDATE accounts SET ${fields.join(', ')} WHERE account_id = ? AND status = "Y"`;
+        const result = await db.run(sql, values);
+
+        return res.json({
+            code: 200,
+            success: true,
+            message: 'Account updated successfully',
+            result
+        });
     } catch (error) {
         console.error('Error updating account:', error);
-        res.status(500).json({ error: error.message || 'Failed to update account' });
+        return res.json({
+            code: 500,
+            success: false,
+            message: error.message || 'Failed to update account'
+        });
     }
 }
-
+/**
+ * Delete account by id
+ * @param {Object} req - account_id
+ * @param {Object} res - Account will be deleted successfully
+ */
+const deleteAccountById = async (req, res) => {
+    try {
+        const { accountId } = req.params;
+        const sql = 'UPDATE accounts SET status = "D" WHERE account_id = ?';
+        const result = await db.run(sql, [accountId]);
+        if (!result) {
+            throw new Error('Account not found');
+        }
+        return res.json({
+            code: 200,
+            success: true,
+            message: 'Account deleted successfully',
+            result
+        })
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        return res.json({
+            code: 500,
+            success: false,
+            message: error.message || 'Failed to delete account'
+        })
+    }
+}
 module.exports = {
     createAccount,
     getAccounts,
     getAccountById,
-    updateAccountById
+    updateAccountById,
+    deleteAccountById
 };
