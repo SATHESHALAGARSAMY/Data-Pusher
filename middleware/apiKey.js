@@ -19,7 +19,7 @@ const authenticateApiKey = async (req, res, next) => {
         .json({ message: "Access denied, no API key provided" });
     }
     const api_user_details =
-      "SELECT account_id,email,account_name,website,app_secret_token, r_status_code FROM accounts WHERE app_secret_token = ?";
+      "SELECT account_id,email,account_name,website,app_secret_token, r_status_code FROM accounts WHERE app_secret_token = ? AND status = 'Y'";
   
     let api_key_data = await db.get(api_user_details, [apiKey]);
     if (api_key_data.length === 0) {
