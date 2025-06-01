@@ -12,7 +12,7 @@ const db = getDatabase();
 const createAccount = async (req, res) => {
     try {
         const { accountId, email, accountName, website } = req.body;
-        if (!accountId || !email || !accountName || !website || !appSecretToken) {
+        if (!accountId || !email || !accountName || !website) {
             throw new Error('Missing required fields');
         }
         // Check if the email already exists
