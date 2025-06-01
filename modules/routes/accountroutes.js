@@ -7,4 +7,5 @@ router.post('/createAccount', account.createAccount);
 router.get('/getAccounts', account.getAccounts);
 router.get('/getAccountById/:accountId', account.getAccountById);
 router.put('/updateAccountById/:accountId', account.updateAccountById);
+router.post('/deleteAccountById', account.deleteAccountById);
 module.exports = router;
