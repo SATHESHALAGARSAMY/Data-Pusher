@@ -1,12 +1,13 @@
 const express = require("express");
 const destination = require("../models/destination");
+const authenticateApiKey = require("../../middleware/apiKey");
 const router = express.Router();
 
-router.post('/createDestination', destination.createDestination);
-router.get('/getAllDestinations/:accountId', destination.getAllDestinations);
-router.get('/getDestinationById/:destinationId', destination.getDestinationById);
-router.put('/updateDestinationById', destination.updateDestinationById);
-router.post('/deleteDestinationById', destination.deleteDestinationById);
-router.post('/deleteAllDestinationsByAccountId', destination.deleteAllDestinationsByAccountId);
+router.post('/createDestination', authenticateApiKey.authenticateApiKey, destination.createDestination);
+router.get('/getAllDestinations/:accountId', authenticateApiKey.authenticateApiKey, destination.getAllDestinations);
+router.get('/getDestinationById/:destinationId', authenticateApiKey.authenticateApiKey, destination.getDestinationById);
+router.put('/updateDestinationById/:destinationId', authenticateApiKey.authenticateApiKey, destination.updateDestinationById);
+router.post('/deleteDestinationById', authenticateApiKey.authenticateApiKey, destination.deleteDestinationById);
+router.post('/deleteAllDestinationsByAccountId', authenticateApiKey.authenticateApiKey, destination.deleteAllDestinationsByAccountId);
 
 module.exports = router;
